@@ -1,0 +1,10 @@
+#!/bin/zsh
+array=("${(@f)$(ls -lf)}")
+
+mkdir -p ./shorteneds
+for dir in $array; do
+    [[ "$dir" == "shorten" ]] && continue
+    # echo ${dir%.*}
+    ffmpeg -ss 00:00:04 -i "$dir" -to 00:00:10 -c copy "./shorteneds/${dir%.*} shortened.3gp"
+    # ffmpeg -i "${dir%.*} shortened.3gp" -c:v copy -c:a copy "${dir%.*} shortened.mp4"
+done

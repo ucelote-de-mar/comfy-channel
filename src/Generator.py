@@ -27,11 +27,15 @@ def listdir_file_walk(dir):
     return directory_listing
 
 
-def gen_playlist(dir, num_files=5):
+def gen_playlist(dir, num_files=5, prev_block=[]):
+    num_files=int(num_files)
     Logger.LOGGER.log(Logger.TYPE_INFO,
                       'Generating playlist from directory: {}'.format(dir))
     playlist = []
     directory_listing = []
+    
+    already_played = open('random_test.txt', 'a')
+    already_played.write('HERE IT COMES...\n')
 
     # https://stackoverflow.com/questions/2909975/python-list-directory-subdirectory-and-files
     for path, dirs, files in os.walk(dir):
@@ -40,12 +44,52 @@ def gen_playlist(dir, num_files=5):
         for name in files:
             directory_listing += [os.path.join(path, name)]
 
-    random.shuffle(directory_listing)
+    # Do not repeat songs that often
+
+    # print("\n DIRECTORY LISTING \n")
+    # for x in directory_listing:
+    #     print(x)
+    # print("\n PREV BLOCK \n")
+    # for x in prev_block:
+    #     print(x)
+
+    directory_left = [x for x in directory_listing if x not in prev_block]
+
+    # print("\n DIRECTORY LEFT \n")
+    # for x in directory_left:
+    #     print(x)
+
+    if len(directory_left) < num_files:
+
+        # print("\n############ NOT ENOUGH FILES: \n")
+
+        following_vids = [x for x in directory_listing if x not in directory_left]
+
+        random.shuffle(directory_left)
+        random.shuffle(following_vids)
+        directory_left += following_vids
+        directory_listing = directory_left
+
+        prev_block = [x for x in prev_block if x not in directory_listing]
+    else:
+        random.shuffle(directory_left)
+        directory_listing = directory_left
+
+    # print("\n DIRECTORY LEFT shuffled \n")
+    # for x in directory_left:
+    #     print(x)
+
     for i in directory_listing[:num_files]:
+        already_played.write(i+"\n")
+        prev_block += i
         playlist.append(MediaItem(i))
+    already_played.close()
 
-    return playlist
+    # print("\n PREV BLOCK \n")
+    # for x in prev_block:
+    #     print(x)
 
+    return playlist, prev_block
 
 def gen_upnext(video_dir, audio_dir=None, playlist=None, info_file=None):
     video_file = None
